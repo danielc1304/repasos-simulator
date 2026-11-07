@@ -355,6 +355,9 @@ function setMode(mode) {
 // ========================================
 
 function init() {
+  // Load settings first so header controls render correctly
+  State.settings = StorageService.loadSettings();
+  
   initializeLayout();
   renderLoadingMode();
 
