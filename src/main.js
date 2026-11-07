@@ -300,40 +300,36 @@ function renderHeaderControls() {
   container.innerHTML = `
     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
       <!-- Mode toggle -->
-      <div style="display: flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.5rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius);">
-        <span style="font-size: 0.75rem; color: var(--color-text-muted);">Modo:</span>
-        <select id="modeSelect" class="select" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; min-width: 120px;">
-          <option value="evaluation" ${State.settings.mode === 'evaluation' ? 'selected' : ''}>📝 Evaluación</option>
-          <option value="study" ${State.settings.mode === 'study' ? 'selected' : ''}>📚 Repaso</option>
-        </select>
-      </div>
+      <label class="mode-toggle" title="Cambiar modo">
+        <input type="radio" name="mode" value="evaluation" id="modeEvaluation" ${State.settings.mode === 'evaluation' ? 'checked' : ''}>
+        <span class="mode-toggle-option">📝 Evaluación</span>
+        <input type="radio" name="mode" value="study" id="modeStudy" ${State.settings.mode === 'study' ? 'checked' : ''}>
+        <span class="mode-toggle-option">📚 Repaso</span>
+      </label>
 
       <!-- Shuffle questions -->
-      <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.75rem; color: var(--color-text-muted);">
-        <input type="checkbox" id="shuffleQuestionsToggle" ${State.settings.shuffleQuestions ? 'checked' : ''} style="width: 14px; height: 14px; accent-color: var(--color-accent);">
-        🔀 Preguntas
+      <label class="slide-toggle" title="Aleatorizar orden de preguntas">
+        <input type="checkbox" id="shuffleQuestionsToggle" ${State.settings.shuffleQuestions ? 'checked' : ''}>
+        <span class="slide-toggle-track" aria-hidden="true"></span>
+        <span class="slide-toggle-label">🔀 Preguntas</span>
       </label>
 
       <!-- Shuffle options -->
-      <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.75rem; color: var(--color-text-muted);">
-        <input type="checkbox" id="shuffleOptionsToggle" ${State.settings.shuffleOptions ? 'checked' : ''} style="width: 14px; height: 14px; accent-color: var(--color-accent);">
-        🔀 Opciones
+      <label class="slide-toggle" title="Aleatorizar opciones de cada pregunta">
+        <input type="checkbox" id="shuffleOptionsToggle" ${State.settings.shuffleOptions ? 'checked' : ''}>
+        <span class="slide-toggle-track" aria-hidden="true"></span>
+        <span class="slide-toggle-label">🔀 Opciones</span>
       </label>
     </div>
   `;
 
   // Bind events
-  container.querySelector('#modeSelect')?.addEventListener('change', (e) => {
-    State.settings.mode = e.target.value;
-    State.settings.showExplanationImmediately = e.target.value === 'study';
-    StorageService.saveSettings(State.settings);
-    renderQuizMode(); // Re-render to apply mode change
-  });
+  container.querySelector('#modeEvaluation')?.addEventListener('change', () => setMode('evaluation'));
+  container.querySelector('#modeStudy')?.addEventListener('change', () => setMode('study'));
 
   container.querySelector('#shuffleQuestionsToggle')?.addEventListener('change', (e) => {
     State.settings.shuffleQuestions = e.target.checked;
     StorageService.saveSettings(State.settings);
-    // Note: shuffle questions only applies on new quiz load
     createToast(e.target.checked ? 'Shuffle preguntas activado (se aplica al cargar quiz)' : 'Shuffle preguntas desactivado', 'info');
   });
 
@@ -342,6 +338,16 @@ function renderHeaderControls() {
     StorageService.saveSettings(State.settings);
     createToast(e.target.checked ? 'Shuffle opciones activado (se aplica al cargar quiz)' : 'Shuffle opciones desactivado', 'info');
   });
+}
+
+function setMode(mode) {
+  State.settings.mode = mode;
+  State.settings.showExplanationImmediately = mode === 'study';
+  StorageService.saveSettings(State.settings);
+  // Only re-render quiz if we're in quiz mode
+  if (State.mode === 'quiz') {
+    renderQuizMode();
+  }
 }
 
 // ========================================
