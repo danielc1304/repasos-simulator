@@ -9,7 +9,7 @@ import { ProgressBar } from './components/ProgressBar.js';
 import { ResultsView } from './components/ResultsView.js';
 import { StorageService } from './services/StorageService.js';
 import { ScoringService } from './services/ScoringService.js';
-import { createToast, shuffleArray } from './utils/helpers.js';
+import { createToast, shuffleArray, shuffleQuestionOptions } from './utils/helpers.js';
 
 // ========================================
 // STATE MANAGEMENT
@@ -41,6 +41,7 @@ function renderHeader() {
   header.innerHTML = `
     <div class="header-content">
       <h1 class="app-title">📝 Repasos Simulator</h1>
+      <div id="headerControls" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;"></div>
       <div id="headerActions" style="display: flex; gap: 0.5rem; align-items: center;"></div>
     </div>
   `;
@@ -83,6 +84,7 @@ function renderLoadingMode() {
   main.appendChild(loader.render());
 
   updateHeaderActions([]);
+  renderHeaderControls();
 }
 
 function renderQuizMode() {
@@ -129,6 +131,7 @@ function renderQuizMode() {
     { label: '🔀 Reiniciar', variant: 'secondary', onClick: restartQuiz },
     { label: '📂 Cambiar quiz', variant: 'ghost', onClick: loadNewQuiz }
   ]);
+  renderHeaderControls();
 }
 
 function renderResultsMode() {
@@ -142,6 +145,7 @@ function renderResultsMode() {
   updateHeaderActions([
     { label: '📂 Cargar otro quiz', variant: 'ghost', onClick: loadNewQuiz }
   ]);
+  renderHeaderControls();
 
   // Save to history
   StorageService.saveResult({
@@ -162,9 +166,20 @@ function onQuizLoaded(quiz) {
   State.questions = quiz.questions;
   State.settings = StorageService.loadSettings();
 
-  // Apply shuffle if enabled
+  // Apply shuffle questions if enabled
   if (State.settings.shuffleQuestions) {
     State.questions = shuffleArray(State.questions);
+  }
+
+  // Apply shuffle options if enabled (preserves correct answer)
+  if (State.settings.shuffleOptions) {
+    State.questions = State.questions.map(q => {
+      if (q.type === 'multiple_choice' || q.type === 'multiple_select') {
+        const { options, correct } = shuffleQuestionOptions(q);
+        return { ...q, options, correct };
+      }
+      return q;
+    });
   }
 
   // Load saved progress
@@ -275,6 +290,57 @@ function updateHeaderActions(actions) {
 
   container.querySelectorAll('button').forEach((btn, index) => {
     btn.addEventListener('click', actions[index].onClick);
+  });
+}
+
+function renderHeaderControls() {
+  const container = document.querySelector('#headerControls');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <!-- Mode toggle -->
+      <div style="display: flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.5rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius);">
+        <span style="font-size: 0.75rem; color: var(--color-text-muted);">Modo:</span>
+        <select id="modeSelect" class="select" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; min-width: 120px;">
+          <option value="evaluation" ${State.settings.mode === 'evaluation' ? 'selected' : ''}>📝 Evaluación</option>
+          <option value="study" ${State.settings.mode === 'study' ? 'selected' : ''}>📚 Repaso</option>
+        </select>
+      </div>
+
+      <!-- Shuffle questions -->
+      <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.75rem; color: var(--color-text-muted);">
+        <input type="checkbox" id="shuffleQuestionsToggle" ${State.settings.shuffleQuestions ? 'checked' : ''} style="width: 14px; height: 14px; accent-color: var(--color-accent);">
+        🔀 Preguntas
+      </label>
+
+      <!-- Shuffle options -->
+      <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.75rem; color: var(--color-text-muted);">
+        <input type="checkbox" id="shuffleOptionsToggle" ${State.settings.shuffleOptions ? 'checked' : ''} style="width: 14px; height: 14px; accent-color: var(--color-accent);">
+        🔀 Opciones
+      </label>
+    </div>
+  `;
+
+  // Bind events
+  container.querySelector('#modeSelect')?.addEventListener('change', (e) => {
+    State.settings.mode = e.target.value;
+    State.settings.showExplanationImmediately = e.target.value === 'study';
+    StorageService.saveSettings(State.settings);
+    renderQuizMode(); // Re-render to apply mode change
+  });
+
+  container.querySelector('#shuffleQuestionsToggle')?.addEventListener('change', (e) => {
+    State.settings.shuffleQuestions = e.target.checked;
+    StorageService.saveSettings(State.settings);
+    // Note: shuffle questions only applies on new quiz load
+    createToast(e.target.checked ? 'Shuffle preguntas activado (se aplica al cargar quiz)' : 'Shuffle preguntas desactivado', 'info');
+  });
+
+  container.querySelector('#shuffleOptionsToggle')?.addEventListener('change', (e) => {
+    State.settings.shuffleOptions = e.target.checked;
+    StorageService.saveSettings(State.settings);
+    createToast(e.target.checked ? 'Shuffle opciones activado (se aplica al cargar quiz)' : 'Shuffle opciones desactivado', 'info');
   });
 }
 

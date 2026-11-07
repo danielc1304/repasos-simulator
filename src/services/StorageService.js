@@ -61,7 +61,9 @@ export class StorageService {
   static loadSettings() {
     return storage.get(STORAGE_KEYS.SETTINGS, {
       shuffleQuestions: false,
+      shuffleOptions: false,
       showExplanationImmediately: false,
+      mode: 'evaluation', // 'evaluation' | 'study'
       timerEnabled: false,
       timerDuration: 0
     });

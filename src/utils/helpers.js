@@ -49,6 +49,38 @@ export function shuffleArray(array) {
 }
 
 /**
+ * Shuffle question options while preserving correct answer indices
+ * Returns { shuffledOptions, newCorrectIndexOrArray }
+ */
+export function shuffleQuestionOptions(question) {
+  if (!question.options || question.options.length < 2) {
+    return { options: question.options, correct: question.correct };
+  }
+
+  const indices = question.options.map((_, i) => i);
+  const shuffledIndices = shuffleArray([...indices]);
+
+  // Map old index -> new index
+  const indexMap = {};
+  shuffledIndices.forEach((oldIdx, newIdx) => {
+    indexMap[oldIdx] = newIdx;
+  });
+
+  const shuffledOptions = shuffledIndices.map(oldIdx => question.options[oldIdx]);
+
+  let newCorrect;
+  if (question.type === 'multiple_choice') {
+    newCorrect = indexMap[question.correct];
+  } else if (question.type === 'multiple_select') {
+    newCorrect = question.correct.map(oldIdx => indexMap[oldIdx]).sort((a, b) => a - b);
+  } else {
+    newCorrect = question.correct;
+  }
+
+  return { options: shuffledOptions, correct: newCorrect };
+}
+
+/**
  * Validate quiz schema
  */
 export function validateQuiz(quiz) {
