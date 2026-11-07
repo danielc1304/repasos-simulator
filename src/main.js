@@ -300,12 +300,12 @@ function renderHeaderControls() {
   container.innerHTML = `
     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
       <!-- Mode toggle -->
-      <label class="mode-toggle" title="Cambiar modo">
+      <div class="mode-toggle" title="Cambiar modo">
         <input type="radio" name="mode" value="evaluation" id="modeEvaluation" ${State.settings.mode === 'evaluation' ? 'checked' : ''}>
-        <span class="mode-toggle-option">📝 Evaluación</span>
+        <label for="modeEvaluation" class="mode-toggle-option">📝 Evaluación</label>
         <input type="radio" name="mode" value="study" id="modeStudy" ${State.settings.mode === 'study' ? 'checked' : ''}>
-        <span class="mode-toggle-option">📚 Repaso</span>
-      </label>
+        <label for="modeStudy" class="mode-toggle-option">📚 Repaso</label>
+      </div>
 
       <!-- Shuffle questions -->
       <label class="slide-toggle" title="Aleatorizar orden de preguntas">
