@@ -194,13 +194,13 @@ function onAnswerChange(questionId, answer) {
   const answeredCount = Object.keys(State.answers).length;
   State.components.progressBar?.update(State.questions.length, State.currentIndex, answeredCount);
 
-  // If in study mode, re-render question card to show feedback
-  if (State.settings.showExplanationImmediately) {
-    const question = State.questions[State.currentIndex];
+  // Always update question card to reflect selection visually
+  const question = State.questions[State.currentIndex];
+  if (question && question.id === questionId) {
     State.components.questionCard?.update(
       { ...question, _index: State.currentIndex + 1 },
       State.answers[question.id],
-      { showFeedback: true }
+      { showFeedback: State.settings.showExplanationImmediately }
     );
   }
 }
