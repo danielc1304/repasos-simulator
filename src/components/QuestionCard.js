@@ -183,37 +183,37 @@ export class QuestionCard {
 
     const container = this.element;
 
-    if (this.question.type === 'multiple_choice') {
-      container.querySelectorAll('.option-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const index = parseInt(item.dataset.index, 10);
-          this.onAnswerChange(this.question.id, index);
-        });
-        item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            item.click();
-          }
-        });
-      });
-    } else if (this.question.type === 'multiple_select') {
-      container.querySelectorAll('.option-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const index = parseInt(item.dataset.index, 10);
-          const current = Array.isArray(this.userAnswer) ? [...this.userAnswer] : [];
-          const newAnswer = current.includes(index)
-            ? current.filter(i => i !== index)
-            : [...current, index];
-          this.onAnswerChange(this.question.id, newAnswer);
-        });
-        item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            item.click();
-          }
-        });
-      });
-    } else if (this.question.type === 'open_ended') {
+    // Use event delegation for better reliability
+    container.addEventListener('click', (e) => {
+      const optionItem = e.target.closest('.option-item');
+      if (!optionItem) return;
+
+      const index = parseInt(optionItem.dataset.index, 10);
+      if (isNaN(index)) return;
+
+      if (this.question.type === 'multiple_choice') {
+        this.onAnswerChange(this.question.id, index);
+      } else if (this.question.type === 'multiple_select') {
+        const current = Array.isArray(this.userAnswer) ? [...this.userAnswer] : [];
+        const newAnswer = current.includes(index)
+          ? current.filter(i => i !== index)
+          : [...current, index];
+        this.onAnswerChange(this.question.id, newAnswer);
+      }
+    });
+
+    // Keyboard support
+    container.addEventListener('keydown', (e) => {
+      const optionItem = e.target.closest('.option-item');
+      if (!optionItem) return;
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        optionItem.click();
+      }
+    });
+
+    if (this.question.type === 'open_ended') {
       const textarea = container.querySelector(`#answer-${this.question.id}`);
       if (textarea) {
         textarea.addEventListener('input', debounce(() => {

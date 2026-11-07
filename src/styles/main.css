@@ -301,6 +301,30 @@ body {
   background: var(--color-bg);
 }
 
+.option-checkbox {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.option-item.selected .option-checkbox {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.option-item.selected .option-checkbox::after {
+  content: '✓';
+  color: var(--color-bg);
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
 .option-text { flex: 1; font-size: 0.9375rem; }
 
 .option-feedback {
