@@ -228,8 +228,17 @@ export class QuestionCard {
     this.userAnswer = userAnswer;
     this.showFeedback = options.showFeedback || false;
     this.isReview = options.isReview || false;
-    this.element.outerHTML = this.render().outerHTML;
-    this.element = this.element.parentElement?.querySelector(`[data-question-id="${this.question.id}"]`);
+
+    const oldElement = this.element;
+    const newElement = this.render();
+    if (oldElement && oldElement.parentElement) {
+      oldElement.outerHTML = newElement.outerHTML;
+      this.element = oldElement.parentElement.querySelector(`[data-question-id="${this.question.id}"]`);
+    } else {
+      this.element = newElement;
+    }
+    // Re-bind events after DOM replacement
+    this.bindEvents();
   }
 
   escapeHtml(text) {

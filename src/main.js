@@ -205,6 +205,16 @@ function onAnswerChange(questionId, answer) {
   }
 }
 
+function hasAnsweredCurrentQuestion() {
+  const question = State.questions[State.currentIndex];
+  if (!question) return true;
+  const answer = State.answers[question.id];
+  if (answer === undefined || answer === null) return false;
+  if (question.type === 'multiple_select' && Array.isArray(answer)) return answer.length > 0;
+  if (question.type === 'open_ended' && typeof answer === 'string') return answer.trim().length > 0;
+  return true;
+}
+
 function bindNavEvents(nav) {
   nav.querySelector('#btnPrev')?.addEventListener('click', () => {
     if (State.currentIndex > 0) {
@@ -214,6 +224,10 @@ function bindNavEvents(nav) {
   });
 
   nav.querySelector('#btnNext')?.addEventListener('click', () => {
+    if (!hasAnsweredCurrentQuestion()) {
+      createToast('Por favor selecciona una respuesta antes de continuar', 'warning');
+      return;
+    }
     if (State.currentIndex < State.questions.length - 1) {
       State.currentIndex++;
       renderQuizMode();
@@ -283,11 +297,19 @@ function init() {
       renderQuizMode();
     } else if (e.key === 'ArrowRight' && State.currentIndex < State.questions.length - 1) {
       e.preventDefault();
+      if (!hasAnsweredCurrentQuestion()) {
+        createToast('Por favor selecciona una respuesta antes de continuar', 'warning');
+        return;
+      }
       State.currentIndex++;
       renderQuizMode();
     }
     // Enter to submit on last question
     else if (e.key === 'Enter' && State.currentIndex === State.questions.length - 1 && e.target.tagName !== 'TEXTAREA') {
+      if (!hasAnsweredCurrentQuestion()) {
+        createToast('Por favor selecciona una respuesta antes de finalizar', 'warning');
+        return;
+      }
       e.preventDefault();
       finishQuiz();
     }
