@@ -1,0 +1,4 @@
+id,type,question,options,correct,explanation,points,keywords
+q1,multiple_choice,Capital de Francia,Madrid;Paris;Roma,1,Paris es la capital,1,
+q2,multiple_select,Planetas del sistema solar,Marte;Sirio;Jupiter;Venus,"0,2",Marte y Jupiter son planetas,2,
+q3,open_ended,Explica la fotosintesis,,,"Proceso plantas convierten luz CO2 en glucosa oxigeno",3,"plantas,luz,CO2,oxigeno,clorofila"
